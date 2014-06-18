@@ -1,0 +1,9 @@
+{
+  "name": "git-hacking",
+  "version": "0.0.1",
+  "description": "Messing with git",
+  "dependencies": {
+    "diff-parse": "*",
+    "git": "*"
+  }
+}

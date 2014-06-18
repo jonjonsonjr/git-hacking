@@ -1,0 +1,2 @@
+all:
+	node index.js
