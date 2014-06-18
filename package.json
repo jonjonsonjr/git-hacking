@@ -3,7 +3,9 @@
   "version": "0.0.1",
   "description": "Messing with git",
   "dependencies": {
+    "async": "^0.9.0",
     "diff-parse": "*",
-    "git": "*"
+    "git": "*",
+    "keypress": "^0.2.1"
   }
 }
