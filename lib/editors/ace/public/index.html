@@ -33,7 +33,8 @@
   });
   socket.on('delete', function (msg) {
     console.log('delete ' + msg.line);
-    editor.removeToLineEnd();
+    editor.gotoLine(msg.line, 0, false);
+    editor.removeLines(msg.line, msg.line);
   });
   socket.on('insert', function (msg) {
     editor.insert(msg.text);
