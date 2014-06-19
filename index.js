@@ -28,7 +28,6 @@ new Repo(repoPath, function (err, repo) {
     }, function (err) {
       var editor = new Editor();
       var consumer = new Consumer(queue, editor, {speed: 1});
-      if (editor.name !== 'ace') consumer.start();
     });
   });
 });
