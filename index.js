@@ -1,10 +1,7 @@
 var async = require('async');
 var parse = require('diff-parse');
-var keypress = require('keypress');
 var Repo = require('git').Repo;
-var exec = require('child_process').exec;
-var Editor = require('./lib/editor');
-var editor = new Editor();
+var Consumer = require('./lib/consumer');
 var queue = [];
 
 // Load up a repo and walk through the logs
@@ -23,50 +20,11 @@ new Repo('.', function (err, repo) {
         callback();
       });
     }, function (err) {
-      consume(queue);
+      var consumer = new Consumer(queue, {speed: 3});
+      consumer.start();
     });
   });
 });
-
-function consume(queue) {
-  if (queue.length == 0) return;
-
-  var e = queue.shift();
-  var action = e.action;
-
-  if (action == 'open file') {
-    editor.openFile(e.file);
-  } else if (action == 'type') {
-    editor.insert(e.data);
-    editor.closeFile();
-  } else if (action == 'edit') {
-    var lines = e.diff[0].lines;
-
-    lines.forEach(function (line) {
-      if (line.type == 'add') {
-        editor.goto(line.ln);
-        editor.insert(line.content);
-      } else if (line.type == 'del') {
-        editor.goto(line.ln);
-        editor.delete(line.ln);
-      }
-    });
-  } else if (action == 'git add') {
-    console.log('> git add ' + e.files.join(' '));
-  } else if (action == 'git commit') {
-    console.log('> git commit');
-    editor.commit();
-    editor.insert(e.message);
-    editor.closeFile();
-  } else if (action == 'git merge') {
-    console.log('> git merge');
-    editor.commit();
-  }
-
-  setTimeout(function () {
-    consume(queue);
-  }, 100);
-}
 
 // Push events based on what happened to each file in this commit
 function handleFile(repo, change, cb) {
@@ -127,24 +85,4 @@ function done(log) {
       message: log.message
     });
   }
-}
-
-// Capture keypress events
-/*keypress(process.stdin);
-process.stdin.on('keypress', function (ch, key) {
-  console.log(key);
-  if (key && key.ctrl && key.name == 'c') {
-    process.stdin.pause();
-  }
-});
-process.stdin.setRawMode(true);
-process.stdin.resume();
-*/
-
-// Use this later when we're not testing
-function clone(url, cb) {
-  var child = exec('git clone ' + url, function (err, stdout, stderr) {
-    if (err !== null) return cb(err);
-    return cb(null);
-  });
 }
