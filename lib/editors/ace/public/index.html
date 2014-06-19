@@ -21,6 +21,7 @@
   socket.on('openFile', function (msg) {
     console.log('open');
     editor.env.document.setValue(msg.text);
+    document.title = msg.filename;
   });
   socket.on('closeFile', function (msg) {
     console.log('close');
@@ -56,6 +57,7 @@
   editor.setTheme("ace/theme/monokai");
   editor.setBehavioursEnabled(false);
   editor.setWrapBehavioursEnabled(false);
+  editor.setShowPrintMargin(false);
   editor.getSession().setMode("ace/mode/javascript");
   editor.getSession().setNewLineMode("unix");
   editor.getSession().setUseSoftTabs(true);
