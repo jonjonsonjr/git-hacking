@@ -2,10 +2,15 @@ var async = require('async');
 var parse = require('diff-parse');
 var Repo = require('git').Repo;
 var Consumer = require('./lib/consumer');
+var Editor = require('./lib/editors/stub');
 var queue = [];
 
+// give it the path to a repo on your local machine
+// TODO: Add cloning so we can point it at github
+var repoPath = '.';
+
 // Load up a repo and walk through the logs
-new Repo('.', function (err, repo) {
+new Repo(repoPath, function (err, repo) {
   repo.log(function (err, logs) {
     logs.reverse();
 
@@ -20,7 +25,8 @@ new Repo('.', function (err, repo) {
         callback();
       });
     }, function (err) {
-      var consumer = new Consumer(queue, {speed: 3});
+      var editor = new Editor();
+      var consumer = new Consumer(queue, editor, {speed: 3});
       consumer.start();
     });
   });
