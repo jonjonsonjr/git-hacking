@@ -5,9 +5,10 @@ var Consumer = require('./lib/consumer');
 var Editor = require('./lib/editors/ace');
 var queue = [];
 
+var args = process.argv.slice(2);
 // give it the path to a repo on your local machine
 // TODO: Add cloning so we can point it at github
-var repoPath = '.';
+var repoPath = args[0] || '.';
 
 // Load up a repo and walk through the logs
 new Repo(repoPath, function (err, repo) {
