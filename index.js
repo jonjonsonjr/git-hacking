@@ -3,6 +3,8 @@ var parse = require('diff-parse');
 var keypress = require('keypress');
 var Repo = require('git').Repo;
 var exec = require('child_process').exec;
+var Editor = require('./lib/editor');
+var editor = new Editor();
 var queue = [];
 
 // Load up a repo and walk through the logs
@@ -21,10 +23,50 @@ new Repo('.', function (err, repo) {
         callback();
       });
     }, function (err) {
-      console.log(queue);
+      consume(queue);
     });
   });
 });
+
+function consume(queue) {
+  if (queue.length == 0) return;
+
+  var e = queue.shift();
+  var action = e.action;
+
+  if (action == 'open file') {
+    editor.openFile(e.file);
+  } else if (action == 'type') {
+    editor.insert(e.data);
+    editor.closeFile();
+  } else if (action == 'edit') {
+    var lines = e.diff[0].lines;
+
+    lines.forEach(function (line) {
+      if (line.type == 'add') {
+        editor.goto(line.ln);
+        editor.insert(line.content);
+      } else if (line.type == 'del') {
+        editor.goto(line.ln);
+        editor.delete(line.ln);
+      }
+    });
+  } else if (action == 'git add') {
+    console.log('> git add ' + e.files.join(' '));
+  } else if (action == 'git commit') {
+    console.log('> git commit');
+    editor.commit();
+    editor.insert(e.message);
+    editor.closeFile();
+  } else if (action == 'git merge') {
+    console.log('> git merge');
+    editor.commit();
+  }
+
+  setTimeout(function () {
+    consume(queue);
+  }, 100);
+}
 
 // Push events based on what happened to each file in this commit
 function handleFile(repo, change, cb) {
@@ -56,6 +98,7 @@ function handleFile(repo, change, cb) {
       });
       queue.push({
         action: "edit",
+        blob: change.a_blob,
         diff: parse(out)
       });
       cb();
@@ -71,7 +114,8 @@ function done(log) {
 
   if (isMerge) {
     queue.push({
-      action: "git merge"
+      action: "git merge",
+      message: log.message
     });
   } else {
     queue.push({
@@ -80,7 +124,6 @@ function done(log) {
     });
     queue.push({
       action: "git commit",
-      short_message: log.short_message,
       message: log.message
     });
   }
