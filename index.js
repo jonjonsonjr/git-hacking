@@ -2,7 +2,7 @@ var async = require('async');
 var parse = require('diff-parse');
 var Repo = require('git').Repo;
 var Consumer = require('./lib/consumer');
-var Editor = require('./lib/editors/stub');
+var Editor = require('./lib/editors/ace');
 var queue = [];
 
 // give it the path to a repo on your local machine
@@ -26,8 +26,8 @@ new Repo(repoPath, function (err, repo) {
       });
     }, function (err) {
       var editor = new Editor();
-      var consumer = new Consumer(queue, editor, {speed: 3});
-      consumer.start();
+      var consumer = new Consumer(queue, editor, {speed: 1});
+      if (editor.name !== 'ace') consumer.start();
     });
   });
 });
@@ -39,7 +39,8 @@ function handleFile(repo, change, cb) {
       if (err) return console.log(err);
       queue.push({
         action: "open file",
-        file: change.path
+        file: change.path,
+        data: ""
       });
       queue.push({
         action: "type",
@@ -56,16 +57,19 @@ function handleFile(repo, change, cb) {
   } else if (change.what == 'M') {
     repo.git.call_git('', 'diff', [], {}, [change.a_blob, change.b_blob], function (err, out) {
       if (err) return console.log(err);
-      queue.push({
-        action: "open file",
-        file: change.path
+      repo.blob(change.a_blob, function (err, blob) {
+        queue.push({
+          action: "open file",
+          file: change.path,
+          data: blob.data
+        });
+        queue.push({
+          action: "edit",
+          blob: change.a_blob,
+          diff: parse(out)
+        });
+        cb();
       });
-      queue.push({
-        action: "edit",
-        blob: change.a_blob,
-        diff: parse(out)
-      });
-      cb();
     });
   }
 }

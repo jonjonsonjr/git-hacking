@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>ACE in Action</title>
+<style type="text/css" media="screen">
+#editor {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+}
+</style>
+</head>
+<body>
+  <div id="editor"></div>
+  <script src="http://code.jquery.com/jquery-1.11.1.js"></script>
+  <script src="socket.io/socket.io.js"></script>
+  <script>
+  var socket = io();
+  socket.on('openFile', function (msg) {
+    console.log('open');
+    editor.env.document.setValue(msg.text);
+  });
+  socket.on('closeFile', function (msg) {
+    console.log('close');
+    editor.env.document.setValue('');
+  });
+  socket.on('goto', function (msg) {
+    console.log('goto ' + msg.line);
+    editor.gotoLine(msg.line, 0, false);
+  });
+  socket.on('delete', function (msg) {
+    console.log('delete ' + msg.line);
+    editor.removeToLineEnd();
+  });
+  socket.on('insert', function (msg) {
+    editor.insert(msg.text);
+    if (msg.text === '\n') {
+      editor.moveCursorTo(editor.getCursorPosition().row, 0);
+    }
+  });
+  socket.on('commit', function (msg) {
+      console.log('commit');
+  });
+
+  $(document).keypress(function (event) {
+    event.preventDefault();
+    socket.emit('keypress', {});
+    return false;
+  });
+  </script>
+  <script src="ace-builds/src-min-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
+  <script>
+  var editor = ace.edit("editor");
+  editor.setTheme("ace/theme/monokai");
+  editor.setBehavioursEnabled(false);
+  editor.setWrapBehavioursEnabled(false);
+  editor.getSession().setMode("ace/mode/javascript");
+  editor.getSession().setNewLineMode("unix");
+  editor.getSession().setUseSoftTabs(true);
+  editor.getSession().setTabSize(0);
+  </script>
+</body>
+</html>
