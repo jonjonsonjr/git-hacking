@@ -68,10 +68,6 @@
     return false;
   });
 
-  setInterval(function () {
-      socket.emit('keypress');
-  }, 10);
-
   function hideTerm() {
     $("#terminal").hide();
     $("#editor").show();
