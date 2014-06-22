@@ -2,6 +2,10 @@
   "name": "git-hacking",
   "version": "0.0.1",
   "description": "Messing with git",
+  "repository": {
+    "type": "git",
+    "url": "http://github.com/jonjonsonjr/git-hacking.git"
+  }
   "dependencies": {
     "async": "^0.9.0",
     "diff-parse": "*",
