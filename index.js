@@ -1,5 +1,7 @@
 var async = require('async');
 var parse = require('diff-parse');
+var detect = require('language-detect');
+var tempWrite = require('temp-write');
 var Repo = require('git').Repo;
 var Consumer = require('./lib/consumer');
 var Editor = require('./lib/editors/ace');
@@ -39,16 +41,22 @@ function handleFile(repo, change, cb) {
   if (change.what == 'A') {
     repo.blob(change.b_blob, function (err, blob) {
       if (err) return console.log(err);
-      queue.push({
-        action: "open file",
-        file: change.path,
-        data: ""
+
+      getFileType(blob.data, change.path, function (err, type) {
+        if (err) return console.log(err);
+
+        queue.push({
+          action: "open file",
+          file: change.path,
+          type: type,
+          data: ""
+        });
+        queue.push({
+          action: "type",
+          data: blob.data
+        });
+        cb();
       });
-      queue.push({
-        action: "type",
-        data: blob.data
-      });
-      cb();
     });
   } else if (change.what == 'D') {
     queue.push({
@@ -60,17 +68,24 @@ function handleFile(repo, change, cb) {
     repo.git.call_git('', 'diff', [], {}, [change.a_blob, change.b_blob], function (err, out) {
       if (err) return console.log(err);
       repo.blob(change.a_blob, function (err, blob) {
-        queue.push({
-          action: "open file",
-          file: change.path,
-          data: blob.data
-        });
-        queue.push({
-          action: "edit",
-          blob: change.a_blob,
-          diff: parse(out)
-        });
+        if (err) return console.log(err);
+
+        getFileType(blob.data, change.path, function (err, type) {
+          if (err) return console.log(err);
+
+          queue.push({
+            action: "open file",
+            file: change.path,
+            type: type,
+            data: blob.data
+          });
+          queue.push({
+            action: "edit",
+            blob: change.a_blob,
+            diff: parse(out)
+          });
         cb();
+        });
       });
     });
   }
@@ -97,4 +112,17 @@ function done(log) {
       message: log.message
     });
   }
+}
+
+function getFileType(content, name, cb) {
+  tempWrite(content, name, function (err, path) {
+    detect(path, function (err, type) {
+      if (err) return eb(err);
+      if (type === 'C' || type === 'C++') {
+        // Make ace happy
+        type = 'c_cpp';
+      }
+      cb(null, type.toLowerCase().replace(/[ -]/g, '_'));
+    });
+  });
 }

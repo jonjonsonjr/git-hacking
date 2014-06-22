@@ -30,6 +30,7 @@
   socket.on('openFile', function (msg) {
     console.log('open');
     hideTerm();
+    editor.getSession().setMode("ace/mode/" + msg.filetype);
     editor.env.document.setValue(msg.text);
     document.title = msg.filename;
   });
@@ -59,6 +60,7 @@
   });
   socket.on('commit', function (msg) {
     hideTerm();
+    editor.getSession().setMode("ace/mode/plain_text");
     console.log('commit');
   });
 
@@ -101,6 +103,7 @@
   terminal.getSession().setMode("ace/mode/nix");
   terminal.getSession().setNewLineMode("unix");
   terminal.getSession().setUseSoftTabs(true);
+  terminal.getSession().setUseWrapMode(true);
   terminal.getSession().setTabSize(0);
   terminal.insert('$ ');
   </script>
