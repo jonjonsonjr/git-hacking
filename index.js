@@ -103,10 +103,16 @@ function done(log) {
       message: log.message
     });
   } else {
-    queue.push({
-      action: "git add",
-      files: keys
+    var adds = keys.filter(function (key) {
+      return changes[key].what != 'D';
     });
+
+    if (adds.length > 0) {
+      queue.push({
+        action: "git add",
+        files: adds
+      });
+    }
     queue.push({
       action: "git commit",
       message: log.message
