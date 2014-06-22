@@ -19,6 +19,8 @@ new Repo(repoPath, function (err, repo) {
       var changes = log.filechanges;
       var keys = Object.keys(changes);
 
+      if (keys.length > 100) return callback();
+
       async.eachSeries(keys, function (key, cb) {
         handleFile(repo, changes[key], cb);
       }, function (err) {
@@ -27,7 +29,7 @@ new Repo(repoPath, function (err, repo) {
       });
     }, function (err) {
       var editor = new Editor();
-      var consumer = new Consumer(queue, editor, {speed: 1});
+      var consumer = new Consumer(queue, editor, {speed: 3});
     });
   });
 });
