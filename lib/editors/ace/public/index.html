@@ -61,6 +61,8 @@
   socket.on('commit', function (msg) {
     hideTerm();
     editor.getSession().setMode("ace/mode/plain_text");
+    editor.env.document.setValue(msg.text);
+    document.title = 'COMMIT_EDITMSG';
     console.log('commit');
   });
 

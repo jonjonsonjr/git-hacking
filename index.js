@@ -115,7 +115,8 @@ function done(log) {
     }
     queue.push({
       action: "git commit",
-      message: log.message
+      message: log.message,
+      changes: changes
     });
   }
 }
